@@ -18,3 +18,8 @@ class RegisterForm(FlaskForm):
 	username    = StringField  (u'Username'  , validators=[DataRequired()])
 	password    = PasswordField(u'Password'  , validators=[DataRequired()])
 	email       = StringField  (u'Email'     , validators=[DataRequired(), Email()])
+
+class ImageForm(FlaskForm):
+	texts    = StringField  (u'Texts'        )
+	image    = FileField(u'Image'    )
+	submit = SubmitField()

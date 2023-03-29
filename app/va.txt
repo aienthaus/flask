@@ -1,0 +1,22 @@
+ {extensionRequest && !requestComplete ? (
+          <List.Item>An extension request has already been sent</List.Item>
+        ) : !extensionRequest && !requestComplete ? (
+          <List.Item>
+            If you are uncertain of your final program schedule at this time,
+            please provide your availability to the best of your knowledge. If
+            you have extenuating circumstances and are unable to submit your
+            Availability Calendar by <strong>{expirationDate}</strong>, you may
+            request a one-time, 2-week maximum extension by selecting the link
+            provided here: <a href={extensionUrl}>Request an Extension</a>.
+          </List.Item>
+        ) : extensionRequest && requestComplete && extensionRequestApproved ? (
+          <List.Item>
+            The extension request has been approved. A new link has been resent.
+          </List.Item>
+        ) : (
+          <List.Item>The extension request has been denied.</List.Item>
+        )}
+      </List>
+
+      Java
+      

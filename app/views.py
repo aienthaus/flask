@@ -11,16 +11,70 @@ import os, logging
 from flask               import render_template, request, url_for, redirect, send_from_directory
 from flask_login         import login_user, logout_user, current_user, login_required
 from werkzeug.exceptions import HTTPException, NotFound, abort
+from werkzeug.utils import secure_filename
+import numpy as np
 
 # App modules
 from app        import app, lm, db, bc
 from app.models import User
-from app.forms  import LoginForm, RegisterForm
-
+from app.forms  import LoginForm, RegisterForm, ImageForm
+from ultralytics import YOLO
 # Provide login manager with load_user callback
 @lm.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+@app.route('/de')
+def de():
+    return render_template('pages/form.html')
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    filenew = request.files['image']
+    filedirname = os.path.join(os.path.dirname(__file__), app.config['UPLOAD_FOLDER'], secure_filename(filenew.filename))
+    filenew.save(filedirname)
+    model = YOLO(os.path.join(os.path.dirname(__file__),app.config['STATIC_BEST']))
+    # model = YOLO('yolov8x.pt')
+    otcm = model.predict(source=filedirname, save=True)
+    names = otcm[0].names
+    classList = []
+    l = 0
+    for result in otcm:
+        boxes = result.boxes  # Boxes object for bbox outputs
+        masks = result.masks  # Masks object for segmenation masks outputs
+        probs = result.probs 
+    for i in range(len(boxes)):
+        print('i is ', i)
+        ar = boxes[i]
+        classList.append(names[int(ar.cls)] + ' ' +str(ar.conf.item()))
+    return str(result)
+
+@app.route('/detect.html', methods=['GET','POST'])
+def detect():
+    '''detect'''
+
+    form = ImageForm(request.form)
+
+    msg = None
+
+    if request.method == 'GET': 
+
+        return render_template('layouts/auth-default.html',
+                                content=render_template( 'pages/form.html', form=form, msg=msg ) )
+
+    # check if both http method is POST and form is valid on submit
+    if request.method == 'POST':
+        filenew = request.files['image']
+        filenew.save(os.path.join(os.path.dirname(__file__), app.config['UPLOAD_FOLDER'], secure_filename(filenew.filename)))
+        # assign form data to variables
+        msg = request.form.get('texts', '', type=str)
+        return render_template('layouts/auth-default.html',
+                                content=render_template( 'pages/form.html', form=form, msg=msg ) )
+
+    # return render_template('layouts/auth-default.html',
+    # content=render_template( 'pages/form.html', task = request.form['filenames']) )
+    # if request.method == 'GET':
+        
+    
 
 # Logout user
 @app.route('/logout.html')
@@ -119,7 +173,7 @@ def login():
                             content=render_template( 'pages/login.html', form=form, msg=msg ) )
 
 # App main route + generic routing
-@app.route('/', defaults={'path': 'index.html'})
+@app.route('/', defaults={'path': 'form.html'})
 @app.route('/<path>')
 def index(path):
 
@@ -129,12 +183,9 @@ def index(path):
     content = None
 
     try:
-
-        # try to match the pages defined in -> pages/<input file>
         return render_template('layouts/default.html',
                                 content=render_template( 'pages/'+path) )
     except:
-        
         return render_template('layouts/auth-default.html',
                                 content=render_template( 'pages/error-404.html' ) )
 
@@ -142,3 +193,6 @@ def index(path):
 @app.route('/sitemap.xml')
 def sitemap():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'sitemap.xml')
+
+
+

@@ -17,3 +17,7 @@ class Config():
 	SQLALCHEMY_TRACK_MODIFICATIONS 	= False
 
 	SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'database.db')
+	UPLOAD_FOLDER = 'static/files'
+	STATIC_BEST = 'static/lglbst.pt'
+	FLASK_DEBUG = 1
+	
